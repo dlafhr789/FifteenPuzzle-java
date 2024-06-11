@@ -80,30 +80,37 @@ public class FifteenPuzzle {
 
     // 구체적인 AudioPlayer 구현 클래스
     public static class ConcreteAudioPlayer extends AudioPlayer {
+        // 이동시 효과음
         @Override
         public void playMoveEffect() {
             playEffect("swoosh.wav");
         }
 
+        // 움직일 수 없는 버튼 선택시 효과음
         @Override
         public void playErrorEffect() {
             playEffect("wrong.wav");
         }
 
+        // 리셋 버튼 선택시 효과음
         @Override
         public void playResetEffect() {
             playEffect("blip.wav");
         }
 
+        // 셔플 버튼 선택시 효과음
         @Override
         public void playShuffleEffect() {
             playEffect("skip.wav");
         }
+
+        // 재시작 버튼 선택시 효과음
         @Override
         public void playRestartButtonEffect() {
             playEffect("pop.wav");
         }
 
+        // 종료 버튼 선택시 효과음
         @Override
         public void playExitButtonEffect() {
             playEffect("click.wav");
@@ -111,6 +118,7 @@ public class FifteenPuzzle {
 
     }
 
+    // 퍼즐 클리어시 나타나는 화면
     public static class CongratulationsFrame extends JFrame {
         private JPanel contentPane;
         private Game gameInstance;
@@ -235,7 +243,7 @@ public class FifteenPuzzle {
     }
 
 
-
+    // 제일 처음 게임 시작했을 때 화면
     public static class StartScreen extends JFrame {
         private JPanel contentPane;
         private AudioPlayer audioPlayer;
@@ -315,6 +323,7 @@ public class FifteenPuzzle {
         }
     }
 
+    // Runnable 인터페이스를 사용한 타이머 기능
     public static class TimeRunnable implements Runnable {
         private boolean stopFlag = false;
         JLabel timer_label;
@@ -322,16 +331,18 @@ public class FifteenPuzzle {
             this.timer_label =  tl;
         }
         public void setStopFlag(){
+            System.out.println("타이머 쓰래드 종료");
             stopFlag = true;
         }
         @Override
         public void run() {
+            System.out.println("타이머 쓰래드 실행");
             int time = 0;
             while (!stopFlag) {
                 try {
                     Thread.sleep(1000);
                     time++;
-                    System.out.println(time);
+                    System.out.println(time + "초 경과");
                     timer_label.setText("Time: " + time + "s");
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -367,9 +378,11 @@ public class FifteenPuzzle {
         private JLabel timer_label; // 타이머 라벨 추가
         private Timer timer; // 타이머 변수 추가
 
+
         Thread tr;
 
         public Game(int d, AudioPlayer audioPlayer) {
+            System.out.println("본 게임 시작");
             this.title = "재미있는 15 퍼즐 게임";
             this.dim = d;
             this.count = 0;
@@ -533,6 +546,8 @@ public class FifteenPuzzle {
                 }
 
             };
+
+            // 셔플 버튼 설정
             this.shuffle_btn.setPreferredSize(new Dimension(150, 50));
             this.shuffle_btn.setFont(new Font("Fixedsys", Font.BOLD, 25));
             this.shuffle_btn.setForeground(Color.WHITE);
@@ -568,6 +583,7 @@ public class FifteenPuzzle {
             this.info.add(cnt_label, gbc);
 
 
+            // 정보 창 추가
             getContentPane().add(this.info, BorderLayout.NORTH);
             getContentPane().add(this.puzzle_board, BorderLayout.CENTER);
 
@@ -581,15 +597,22 @@ public class FifteenPuzzle {
 
         // (i, j)가 움직일 수 있으면 움직이는 메소드
         private boolean Swap(int i, int j) {
-            if (i == this.coor[0] && j == this.coor[1])
-                return false; // 빈 칸을 클릭했을 때
-            if (Math.abs(i - this.coor[0]) + Math.abs(j - this.coor[1]) == 1) { // 맨해튼 거리가 1일 때 (스왑 가능할 때)
+            // 빈 칸을 클릭했을 때
+            if (i == this.coor[0] && j == this.coor[1]) {
+                System.out.println("자기자신은 움직일 수 없습니다.");
+                return false;
+            }
+            // 맨해튼 거리가 1일 때 (스왑 가능할 때)
+            if (Math.abs(i - this.coor[0]) + Math.abs(j - this.coor[1]) == 1) {
                 int temp = this.now_state[i][j];
                 this.now_state[i][j] = this.now_state[this.coor[0]][this.coor[1]];
                 this.now_state[this.coor[0]][this.coor[1]] = temp;
                 this.coor[0] = i;
                 this.coor[1] = j;
                 this.count++;
+                System.out.println("블럭을 움직였습니다.");
+                System.out.println("움직인 횟수 : " + count);
+
                 return true;
             }
             return false;
@@ -603,6 +626,7 @@ public class FifteenPuzzle {
                         return false;
                 }
             }
+            System.out.println("퍼즐 완성!!");
             return true;
         }
 
@@ -645,6 +669,7 @@ public class FifteenPuzzle {
             if (i_col == -1)
                 return false;
 
+            // 랜덤으로 생성된 퀴즈가 풀이 가능한지 판단
             int cnt = 0;
             for (int i = 0; i < this.dim * this.dim; i++) {
                 if (flat[i] == 0)
@@ -656,6 +681,8 @@ public class FifteenPuzzle {
                         cnt++;
                 }
             }
+
+            // true : 가능, false : 불가능
             return (i_col % 2 == 0 && cnt % 2 == 1) || (i_col % 2 == 1 && cnt % 2 == 0);
         }
 
@@ -663,6 +690,7 @@ public class FifteenPuzzle {
         private void ShuffleBord() {
             Random rd = new Random();
             int[][] result;
+
             do {
                 result = new int[this.dim][this.dim];
                 boolean[] used = new boolean[this.dim * this.dim + 1];
@@ -706,8 +734,10 @@ public class FifteenPuzzle {
                         this.now_state[i][j] = 0;
                         coor[0] = i;
                         coor[1] = j;
+
                         continue;
                     }
+
                     this.target_state[i][j] = i * this.dim + j + 1;
                     this.now_state[i][j] = i * this.dim + j + 1;
                 }
@@ -716,34 +746,46 @@ public class FifteenPuzzle {
 
         // 창 설정 후 띄우기
         public void DisplayGame() {
+            // 창 제목 설정
             setTitle(this.title);
-            setSize(this.width, this.height); // 창 크기 설정
-            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // 창 닫을 때 프로그램 종료
-            setLocationRelativeTo(null); // 창 띄울 때 중앙 배치
-            setResizable(false); // 창 크기조절
+            // 창 크기 설정
+            setSize(this.width, this.height);
+            // 창 닫을 때 프로그램 종료
+            setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            // 창 띄울 때 중앙 배치
+            setLocationRelativeTo(null);
+            // 창 크기조절
+            setResizable(false);
 
             // info 창 (reset, shuffle, count 뜨는 창) 설정
             add(this.info, BorderLayout.NORTH); // 윗쪽에 배치
-            this.info.setBorder(new EmptyBorder(20, 0, 20, 0)); // 상단 마진 설정
-            this.info.add(this.reset_btn); // reset 버튼 배치
-            this.info.add(this.shuffle_btn); // shuffle 버튼 배치
-            this.info.add(this.cnt_label); // count 라벨 배치
+            // 상단 마진 설정
+            this.info.setBorder(new EmptyBorder(20, 0, 20, 0));
+            // reset 버튼 배치
+            this.info.add(this.reset_btn);
+            // shuffle 버튼 배치
+            this.info.add(this.shuffle_btn);
+            // count 라벨 배치
+            this.info.add(this.cnt_label);
 
             // 퍼즐 보드 배치
             add(this.puzzle_board, BorderLayout.CENTER); // 중앙 배치
-            this.puzzle_board.setLayout(new GridLayout(this.dim, this.dim, 20, 20)); // 각각 20px 간격 설정
+            // 각각 20px 간격 설정
+            this.puzzle_board.setLayout(new GridLayout(this.dim, this.dim, 20, 20));
             // 각 버튼 배치
             for (int i = 0; i < this.dim; i++) {
                 for (int j = 0; j < this.dim; j++) {
                     this.puzzle_board.add(btn[i][j]);
                 }
             }
+
             SetBtnText();
 
         }
 
     }
 
+    // 메인 메소드
     public static void main(String[] args) throws Exception {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -751,6 +793,7 @@ public class FifteenPuzzle {
             e.printStackTrace();
         }
 
+        System.out.println("재미있는 16퍼즐 시작.");
         // 게임 시작 화면 띄우기
         new StartScreen();
     }
